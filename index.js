@@ -36,6 +36,15 @@ app.get('/', (req,res) => {
     res.status(200).json("Thanks for visiting the Homepage!");
 });
 
+app.get('/api/users', async(req,res) => {
+    try{
+        const get_users = await User.find();
+        return res.status(200).json(get_users);
+    } catch (err){
+      console.log(err);
+      res.status(500).json({Error: "Unable to retrieve the users"})
+    }
+}) 
 
 app.get('/api/users/:id', async(req,res) => {
     const id = req.params.id;
@@ -43,7 +52,7 @@ app.get('/api/users/:id', async(req,res) => {
         const found_user = await User.findById(id);
 
         if(!found_user){
-          return res.status(200).json({msg: "The User doesnt not exists!"}); 
+          return res.status(404).json({msg: "The User does not exists!"}); 
         }
         
         return res.status(200).json(found_user);
@@ -70,6 +79,8 @@ app.post('/api/users', async (req,res) => {
       res.status(500).json({Error: "Failed to create a user"});
     }
 })
+
+
 
 app.listen(PORT, () => {
     console.log(`The application is running at http://localhost:${PORT}/`);
