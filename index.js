@@ -37,6 +37,22 @@ app.get('/', (req,res) => {
 });
 
 
+app.get('/api/users/:id', async(req,res) => {
+    const id = req.params.id;
+    try{
+        const found_user = await User.findById(id);
+
+        if(!found_user){
+          return res.status(200).json({msg: "The User doesnt not exists!"}); 
+        }
+        
+        return res.status(200).json(found_user);
+    } catch (err){
+        console.log(err);
+        return res.status(500).json("Failed to retrieve the user");
+    }
+})
+
 app.post('/api/users', async (req,res) => {
   if(!req.body || !req.body.first_name || !req.body.last_name || !req.body.email || !req.body.age){
     return res.status(404).json({err: "All fields are required"});
