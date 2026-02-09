@@ -3,97 +3,22 @@ const express = require('express');
 const mongoose = require('mongoose');
 const MONGOURI = process.env.MONGOURI;
 const PORT = process.env.PORT || 8000;
+const User = require('./models/User');
+const connectDB = require('./config/db');
+const routes = require('./routes/user');
+const routes_ping = require('./routes/ping');
 const app = express();
 
 app.use(express.json());
-
-const userSchema = new mongoose.Schema({
-    firstName: {
-      type: String,
-      required: true
-    },
-    lastName: {
-      type: String,
-    },
-    email: {
-      type: String,
-      required: true,
-      unique: true
-    },
-    age: {
-      type: Number
-    }
-})
-
-const User = mongoose.model("JamesDB", userSchema);
-
-mongoose.connect(MONGOURI)
-  .then(() => console.log("MONGODB successfully connected!"))
-  .catch((err) => console.error("Error connection to the Database."));
+app.use('/api/users', routes)
+app.use('/ping', routes_ping);
 
 
-app.get('/', (req,res) => {
-    res.status(200).json("Thanks for visiting the Homepage!");
-});
-
-app.get('/api/users', async(req,res) => {
-    try{
-        const get_users = await User.find();
-        return res.status(200).json(get_users);
-    } catch (err){
-      console.log(err);
-      res.status(500).json({Error: "Unable to retrieve the users"})
-    }
-}) 
-
-app.get('/api/users/:id', async(req,res) => {
-    const id = req.params.id;
-    try{
-        const found_user = await User.findById(id);
-
-        if(!found_user){
-          return res.status(404).json({msg: "The User does not exists!"}); 
-        }
-        
-        return res.status(200).json(found_user);
-    } catch (err){
-        console.log(err);
-        return res.status(500).json("Failed to retrieve the user");
-    }
-})
-
-app.post('/api/users', async (req,res) => {
-  if(!req.body || !req.body.first_name || !req.body.last_name || !req.body.email || !req.body.age){
-    return res.status(404).json({err: "All fields are required"});
-  }
-    try{
-        const result = await User.create({
-            firstName: req.body.first_name,
-            lastName: req.body.last_name,
-            email: req.body.email,
-            age: req.body.age
-        })
-        res.status(201).json(result);
-    } catch(err) {
-      console.log(err);
-      res.status(500).json({Error: "Failed to create a user"});
-    }
-})
+connectDB(process.env.MONGOURI);
 
 
-app.delete('/api/users/:id', async(req,res) =>{
-    const id = req.params.id;
-    try{
-        const deleted_user = await User.deleteOne({_id: id});
-        if(deleted_user.deletedCount === 0){
-            return res.status(404).json({Error: "Invalid ID"});
-        }
-        return res.status(200).json(`The user has been deleted:`);
-    } catch (err) {
-      console.log(err);
-      return res.status(500).json("Unable to delete the user")
-    }
-});
+
+
 
 
 app.listen(PORT, () => {
